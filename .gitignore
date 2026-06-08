@@ -1,0 +1,34 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Test and tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build and package outputs
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+
+# Local secrets
+.env
+era5_backend/.env
+
+# Runtime artifacts
+era5_backend/logs/*
+!era5_backend/logs/.gitkeep
+era5_backend/storage/*.grib
+era5_backend/storage/*.tmp
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
