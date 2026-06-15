@@ -28,7 +28,8 @@ class QueueService:
 
     def download_month(self, year: int, month: int) -> ManifestEntry:
         with self._locks.queue_lock:
-            entry = self._downloader.ensure_downloaded(year, month)
+            self._downloader.ensure_downloaded(year, month)
+            entry = self._require_month(year, month)
             self._trim_unlocked()
             return entry
 
@@ -39,7 +40,8 @@ class QueueService:
                 if self.is_cached(year, month):
                     self._logger.info("Cache hit year=%s month=%s", year, month)
                     continue
-                entries.append(self._downloader.ensure_downloaded(year, month))
+                self._downloader.ensure_downloaded(year, month)
+                entries.append(self._require_month(year, month))
             self._trim_unlocked()
         return entries
 
@@ -71,3 +73,9 @@ class QueueService:
 
     def count(self) -> int:
         return self._manifest.count()
+
+    def _require_month(self, year: int, month: int) -> ManifestEntry:
+        entry = self._manifest.find_month(year, month)
+        if entry is None:
+            raise RuntimeError(f"missing manifest entry for {year:04d}-{month:02d}")
+        return entry

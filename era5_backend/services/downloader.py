@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, replace
 import logging
 from pathlib import Path
 import time
 from typing import Protocol
 
+from era5_backend.core.checksums import sha256_file
 from era5_backend.core.config import Config
-from era5_backend.core.hashing import soil_moisture_hash
+from era5_backend.core.hashing import month_bundle_hash
 from era5_backend.core.locks import LockRegistry, lock_registry
 from era5_backend.core.validation import validate_year_month
 from era5_backend.services.file_service import FileService
@@ -16,6 +18,19 @@ from era5_backend.services.manifest_manager import ManifestEntry, ManifestManage
 class CdsClient(Protocol):
     def retrieve(self, name: str, request: dict[str, object], target: str) -> object:
         ...
+
+
+@dataclass(frozen=True)
+class DownloadResult:
+    success: bool
+    local_path: Path
+    year: int
+    month: int
+    variables: tuple[str, ...]
+    file_size: int
+    checksum: str
+    created_at: str
+    elapsed_seconds: float
 
 
 class Downloader:
@@ -35,32 +50,44 @@ class Downloader:
         self._locks = locks
         self._cds_client = cds_client
 
-    def ensure_downloaded(self, year: int, month: int) -> ManifestEntry:
+    def ensure_downloaded(self, year: int, month: int) -> DownloadResult:
         validate_year_month(year, month)
-        key = soil_moisture_hash(year, month, self._config.variables)
+        key = month_bundle_hash(year, month, self._config.dataset, self._config.variables)
         existing = self._manifest.get(key)
         if existing is not None:
             self._logger.info("Cache hit year=%s month=%s", year, month)
-            return existing
+            return self._result_from_entry(existing)
+        month_entry = self._manifest.find_month(year, month)
+        if month_entry is not None:
+            self._logger.info("Legacy cache hit year=%s month=%s", year, month)
+            return self._result_from_entry(month_entry)
 
         with self._locks.download_lock(key):
             existing = self._manifest.get(key)
             if existing is not None:
                 self._logger.info("Cache hit year=%s month=%s", year, month)
-                return existing
+                return self._result_from_entry(existing)
+            month_entry = self._manifest.find_month(year, month)
+            if month_entry is not None:
+                self._logger.info("Legacy cache hit year=%s month=%s", year, month)
+                return self._result_from_entry(month_entry)
             return self._download_locked(key, year, month)
 
-    def _download_locked(self, key: str, year: int, month: int) -> ManifestEntry:
-        filename = self._files.filename_for(key, year, month)
+    def _download_locked(self, key: str, year: int, month: int) -> DownloadResult:
+        filename = self._files.filename_for(year, month)
         target = self._files.path_for_filename(filename)
-        temp_target = target.with_suffix(".grib.tmp")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        temp_target = self._files.temp_path_for(year, month)
         request = self._request(year, month)
         self._logger.info("Download started year=%s month=%s", year, month)
+        started_at = time.perf_counter()
 
         for attempt in range(1, self._config.retry_attempts + 1):
             try:
                 self._retrieve(request, temp_target)
+                self._validate_artifact(temp_target)
                 temp_target.replace(target)
+                checksum = sha256_file(target)
                 entry = ManifestEntry(
                     key=key,
                     year=year,
@@ -68,10 +95,12 @@ class Downloader:
                     filename=filename,
                     size_bytes=target.stat().st_size,
                     created_at=utc_now_iso(),
+                    checksum=checksum,
+                    variables=list(self._config.variable_aliases),
                 )
                 self._manifest.upsert(entry)
                 self._logger.info("Download completed year=%s month=%s", year, month)
-                return entry
+                return self._result_from_entry(entry, time.perf_counter() - started_at)
             except Exception:
                 if temp_target.exists():
                     temp_target.unlink()
@@ -108,5 +137,37 @@ class Downloader:
             "year": f"{year:04d}",
             "month": f"{month:02d}",
             "time": "00:00",
-            "format": "grib",
+            "format": "netcdf",
         }
+
+    def _result_from_entry(self, entry: ManifestEntry, elapsed_seconds: float = 0.0) -> DownloadResult:
+        target = self._files.path_for_filename(entry.filename)
+        checksum = entry.checksum or sha256_file(target)
+        size_bytes = target.stat().st_size
+        if entry.checksum != checksum or entry.size_bytes != size_bytes:
+            entry = replace(entry, checksum=checksum, size_bytes=size_bytes)
+            self._manifest.upsert(entry)
+        return DownloadResult(
+            success=True,
+            local_path=target,
+            year=entry.year,
+            month=entry.month,
+            variables=self._variables_for_entry(entry),
+            file_size=size_bytes,
+            checksum=checksum,
+            created_at=entry.created_at,
+            elapsed_seconds=elapsed_seconds,
+        )
+
+    def _validate_artifact(self, path: Path) -> None:
+        if not path.exists():
+            raise RuntimeError("downloaded file is missing")
+        if path.stat().st_size <= 0:
+            raise RuntimeError("downloaded file is empty")
+
+    def _variables_for_entry(self, entry: ManifestEntry) -> tuple[str, ...]:
+        if entry.variables:
+            return tuple(entry.variables)
+        if "soil_moisture" in entry.filename:
+            return ("swvl1",)
+        return self._config.variable_aliases

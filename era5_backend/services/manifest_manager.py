@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+from pathlib import PurePosixPath
 import tempfile
 
 from era5_backend.core.config import Config
@@ -18,6 +19,8 @@ class ManifestEntry:
     filename: str
     size_bytes: int
     created_at: str
+    checksum: str | None = None
+    variables: list[str] = field(default_factory=list)
     status: str = "ready"
 
     def to_public_dict(self) -> dict[str, int | bool | str]:
@@ -61,7 +64,7 @@ class ManifestManager:
             valid_entries: dict[str, ManifestEntry] = {}
             for key, raw in raw_entries.items():
                 entry = ManifestEntry(**raw)
-                file_path = self._storage_dir / entry.filename
+                file_path = self._storage_dir / Path(*PurePosixPath(entry.filename).parts)
                 if file_path.exists() and entry.key == key:
                     valid_entries[key] = entry
             self._entries = valid_entries

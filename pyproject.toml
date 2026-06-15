@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "era5-backend"
-version = "0.1.0"
-description = "Standalone ERA5-Land monthly soil moisture download and cache backend."
-readme = "era5_backend/README.md"
+version = "1.0.0"
+description = "Reusable ERA5-Land monthly hydrology downloader and cache backend."
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "Flask>=3.0,<4.0",
