@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "era5-backend"
+name = "era5-fetch"
 version = "1.0.0"
 description = "Reusable ERA5-Land monthly hydrology downloader and cache backend."
 readme = "README.md"
@@ -19,14 +19,15 @@ test = [
 ]
 
 [project.scripts]
-era5-backend = "era5_backend.app:main"
+era5-fetch = "era5_fetch.app:main"
+era5-backend = "era5_fetch.app:main"  # For backwards compatibility
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["era5_backend*"]
+include = ["era5_fetch*"]
 
 [tool.setuptools.package-data]
-era5_backend = ["storage/manifest.json"]
+era5_fetch = ["storage/manifest.json"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

@@ -15,7 +15,7 @@ def load_env_file(project_root: Path) -> Path | None:
 def _candidate_paths(project_root: Path) -> tuple[Path, ...]:
     cwd_env = Path.cwd() / ".env"
     root_env = project_root / ".env"
-    package_env = project_root / "era5_backend" / ".env"
+    package_env = project_root / "era5_fetch" / ".env"
     return tuple(dict.fromkeys((cwd_env.resolve(), root_env.resolve(), package_env.resolve())))
 
 

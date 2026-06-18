@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import os
 
-from era5_backend.core.env import load_env_file
+from era5_fetch.core.env import load_env_file
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path, PurePosixPath
 
-from era5_backend.core.config import Config
+from era5_fetch.core.config import Config
 
 
 class FileService:

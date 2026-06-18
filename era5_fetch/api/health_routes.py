@@ -14,7 +14,7 @@ def create_health_blueprint() -> Blueprint:
     def index() -> tuple[object, int]:
         return jsonify(
             {
-                "service": "era5_backend",
+                "service": "era5_fetch",
                 "status": "ready",
                 "endpoints": {
                     "health": "GET /health",

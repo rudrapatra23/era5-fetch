@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify
 
-from era5_backend.core.config import Config
-from era5_backend.services.queue_service import QueueService
-from era5_backend.services.scheduler import MonthlyScheduler
+from era5_fetch.core.config import Config
+from era5_fetch.services.queue_service import QueueService
+from era5_fetch.services.scheduler import MonthlyScheduler
 
 
 def create_status_blueprint(

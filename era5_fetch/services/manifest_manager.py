@@ -7,8 +7,8 @@ from pathlib import Path
 from pathlib import PurePosixPath
 import tempfile
 
-from era5_backend.core.config import Config
-from era5_backend.core.locks import LockRegistry, lock_registry
+from era5_fetch.core.config import Config
+from era5_fetch.core.locks import LockRegistry, lock_registry
 
 
 @dataclass(frozen=True)

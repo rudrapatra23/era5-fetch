@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify, request
 
-from era5_backend.core.validation import parse_int, validate_year_month
-from era5_backend.services.manifest_manager import ManifestManager
-from era5_backend.services.queue_service import QueueService
-from era5_backend.services.scheduler import _month_window
+from era5_fetch.core.validation import parse_int, validate_year_month
+from era5_fetch.services.manifest_manager import ManifestManager
+from era5_fetch.services.queue_service import QueueService
+from era5_fetch.services.scheduler import _month_window
 
 
 def create_download_blueprint(
@@ -100,7 +100,7 @@ def _year_month_from_args() -> tuple[int, int]:
 
 def _newest_month(year: int | None, month: int | None) -> tuple[int, int]:
     if year is None and month is None:
-        from era5_backend.core.validation import previous_month
+        from era5_fetch.core.validation import previous_month
 
         return previous_month()
     if year is None or month is None:

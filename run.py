@@ -1,4 +1,4 @@
-from era5_backend.app import create_app
+from era5_fetch.app import create_app
 
 app = create_app()
 

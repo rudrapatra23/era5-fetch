@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from flask import Blueprint, jsonify
 
-from era5_backend.services.queue_service import QueueService
+from era5_fetch.services.queue_service import QueueService
 
 
 def create_queue_blueprint(queue: QueueService) -> Blueprint:

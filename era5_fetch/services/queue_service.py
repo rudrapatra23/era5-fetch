@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import logging
 
-from era5_backend.core.config import Config
-from era5_backend.core.locks import LockRegistry, lock_registry
-from era5_backend.services.downloader import Downloader
-from era5_backend.services.file_service import FileService
-from era5_backend.services.manifest_manager import ManifestEntry, ManifestManager
+from era5_fetch.core.config import Config
+from era5_fetch.core.locks import LockRegistry, lock_registry
+from era5_fetch.services.downloader import Downloader
+from era5_fetch.services.file_service import FileService
+from era5_fetch.services.manifest_manager import ManifestEntry, ManifestManager
 
 
 class QueueService:

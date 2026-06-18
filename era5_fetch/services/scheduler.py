@@ -3,9 +3,9 @@ from __future__ import annotations
 import logging
 from threading import Event, Thread
 
-from era5_backend.core.config import Config
-from era5_backend.core.validation import previous_month
-from era5_backend.services.queue_service import QueueService
+from era5_fetch.core.config import Config
+from era5_fetch.core.validation import previous_month
+from era5_fetch.services.queue_service import QueueService
 
 
 class MonthlyScheduler:

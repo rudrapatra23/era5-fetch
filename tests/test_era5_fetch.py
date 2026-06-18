@@ -7,12 +7,12 @@ from threading import Lock
 from types import SimpleNamespace
 import sys
 
-from era5_backend.app import create_app
-from era5_backend.core.config import Config
-from era5_backend.services.downloader import DownloadResult
-from era5_backend.services.file_service import FileService
-from era5_backend.services.manifest_manager import ManifestEntry, ManifestManager, utc_now_iso
-from era5_backend.services.scheduler import MonthlyScheduler, _month_window
+from era5_fetch.app import create_app
+from era5_fetch.core.config import Config
+from era5_fetch.services.downloader import DownloadResult
+from era5_fetch.services.file_service import FileService
+from era5_fetch.services.manifest_manager import ManifestEntry, ManifestManager, utc_now_iso
+from era5_fetch.services.scheduler import MonthlyScheduler, _month_window
 
 
 class FakeCdsClient:
@@ -208,7 +208,7 @@ def test_scheduler_bootstraps_missing_months_when_cache_is_partial(tmp_path: Pat
             self.requested.append((year, month))
             return object()
 
-    monkeypatch.setattr("era5_backend.services.scheduler.previous_month", lambda: (2026, 5))
+    monkeypatch.setattr("era5_fetch.services.scheduler.previous_month", lambda: (2026, 5))
     cfg = Config(
         storage_dir=tmp_path / "storage",
         logs_dir=tmp_path / "logs",
